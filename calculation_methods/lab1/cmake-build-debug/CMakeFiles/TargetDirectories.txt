@@ -1,0 +1,3 @@
+E:/programming/git/BSU_4_semestr/calculation_methods/lab1/cmake-build-debug/CMakeFiles/lab1.dir
+E:/programming/git/BSU_4_semestr/calculation_methods/lab1/cmake-build-debug/CMakeFiles/edit_cache.dir
+E:/programming/git/BSU_4_semestr/calculation_methods/lab1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
