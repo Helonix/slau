@@ -88,17 +88,19 @@ std::ostream& operator<<(std::ostream& out, const Matrix& matrix) {
         }
         out << "\n";
     }
-    out << "\x1b[0m";
+    if (matrix.console_output_colour != NONE){
+        out << "\x1b[0m";
+    }
     out.copyfmt(state);
     return out;
 }
 void Matrix::set_console_text_colour(Colour colour) {
     console_output_colour = colour;
 }
-Matrix Matrix::operator+(const Matrix& rhs) {
-    if (this->rows_amount_ != rhs.rows_amount_ || this->columns_amount_ == rhs.columns_amount_){
+Matrix Matrix::operator+(const Matrix& rhs) const {
+    if (this->rows_amount_ != rhs.rows_amount_ || this->columns_amount_ != rhs.columns_amount_){
         std::cerr << "Inconsistent matrix for operation +\n";
-        return *this;
+        return {this->rows_amount_, this->columns_amount_, 0};
     }
     Matrix result = Matrix(this->rows_amount_, this->columns_amount_, 0);
     for (int i = 0; i < rows_amount_; ++i){
@@ -108,8 +110,9 @@ Matrix Matrix::operator+(const Matrix& rhs) {
     }
     return result;
 }
+
 Matrix::Matrix(std::vector<std::vector<double>>&& matrix) {
-    matrix_ = std::vector(matrix);
+    matrix_ = std::vector<std::vector<double>>(matrix);
     rows_amount_ = matrix_.size();
     if (rows_amount_ > 0){
         columns_amount_ = matrix_[0].size();
@@ -117,4 +120,46 @@ Matrix::Matrix(std::vector<std::vector<double>>&& matrix) {
         std::cerr << "Empty matrix\n";
         return;
     }
+}
+
+Matrix Matrix::operator*(const Matrix& rhs) const {
+    if (this->columns_amount_ != rhs.rows_amount_){
+        std::cerr << "Matrices are inconsistent\n";
+        return {this->rows_amount_, this->columns_amount_, 0};
+    }
+
+    Matrix result(this->rows_amount_, rhs.columns_amount_, 0);
+    for (int i = 0; i < this->rows_amount_; ++i){
+        for (int j = 0; j < rhs.columns_amount_; ++j){
+            for (int k = 0; k < this->columns_amount_; ++k){
+                result.matrix_[i][j] += this->matrix_[i][k] * rhs.matrix_[k][j];
+            }
+        }
+    }
+
+    return result;
+}
+
+
+Matrix Matrix::operator-() const {
+    Matrix result(this->rows_amount_, this->columns_amount_, 0);
+
+    for (int i = 0; i < this->rows_amount_; ++i){
+        for (int j = 0; j < this->columns_amount_; ++j){
+            result.matrix_[i][j] = -this->matrix_[i][j];
+        }
+    }
+
+    return result;
+}
+
+Matrix::Matrix(Matrix& other) {
+    this->matrix_ = std::vector(other.matrix_);
+    this->rows_amount_ = other.rows_amount_;
+    this->columns_amount_ = other.columns_amount_;
+}
+
+// TODO: change implementation: no unary minus usage
+Matrix Matrix::operator-(const Matrix& rhs) const {
+    return *this + (-rhs);
 }
