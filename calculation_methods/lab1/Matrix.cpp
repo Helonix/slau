@@ -4,7 +4,13 @@
 
 #include <iostream>
 #include <iomanip>
+#include <random>
 #include "Matrix.h"
+
+std::random_device rd;
+std::default_random_engine engine(rd());
+std::uniform_real_distribution<double> dist(-std::pow(2.0, 1.5), std::pow(2.0, 1.5));
+
 /// Common matrix constructor
 /// \param rows_amount
 /// \param columns_amount
@@ -162,4 +168,84 @@ Matrix::Matrix(Matrix& other) {
 // TODO: change implementation: no unary minus usage
 Matrix Matrix::operator-(const Matrix& rhs) const {
     return *this + (-rhs);
+}
+
+Matrix Matrix::get_random_symmetrical_matrix(unsigned int size) {
+    Matrix result(size, size, 0);
+    result.make_ones_on_main_diag();
+
+    for (int i = 0; i < size; ++i) {
+        for (int j = i + 1; j < size; ++j) {
+            result.matrix_[i][j] = dist(engine);
+            result.matrix_[j][i] = result.matrix_[i][j];
+
+            result.matrix_[i][i] += std::abs(result.matrix_[i][j]);
+            result.matrix_[j][j] += std::abs(result.matrix_[i][j]);
+        }
+    }
+
+    return result;
+}
+Matrix Matrix::get_random_vector_column(unsigned int size) {
+    Matrix vector(size, 1, 0);
+
+    for (int i = 0; i < size; ++i){
+        vector.matrix_[i][0] = dist(engine);
+    }
+
+    return vector;
+}
+
+long double Matrix::get_cubic_norm() const {
+    long double max_row_sum = 0, current_sum = 0;
+    for (int i = 0; i < this->rows_amount_; ++i){
+        for (int j = 0; j < this->columns_amount_; ++j){
+            current_sum += std::abs(this->matrix_[i][j]);
+        }
+        if (current_sum - max_row_sum > eps){
+            max_row_sum = current_sum;
+            current_sum = 0;
+        }
+    }
+    return max_row_sum;
+}
+Matrix Matrix::inverse_by_gauss_jordan_method() {
+    if (this->rows_amount_ != this->columns_amount_){
+        std::cerr << "Matrix must be square\n";
+        return {this->rows_amount_, this->columns_amount_, 0};
+    }
+
+    Matrix inverse = {this->rows_amount_, this->columns_amount_, 0};
+    inverse.make_ones_on_main_diag();
+    Matrix A = Matrix(*this);
+
+    // forward Gauss
+
+    std::cout << A << "\n" << inverse << "\n";
+
+    for (int i = 0; i < A.rows_amount_ - 1; ++i){
+        for (int k = i + 1; k < A.rows_amount_; ++k){
+            double ratio =  A.matrix_[k][i] / A.matrix_[i][i];
+            for (int j = i; j < A.columns_amount_; ++j){
+                inverse.matrix_[k][j] -= inverse.matrix_[i][j] * ratio;
+                A.matrix_[k][j] -= A.matrix_[i][j] * ratio;
+            }
+            std::cout << ratio << "\n" << A << "\n" << inverse << "\n";
+        }
+    }
+
+    // Reverse Gauss
+
+    for (int i = A.rows_amount_ - 1; i > 0; --i){
+        for (int k = i - 1; k >= 0; --k){
+            double ratio =  A.matrix_[k][i] / A.matrix_[i][i];
+            for (int j = i; j >= k; --j){
+                inverse.matrix_[k][j] -= inverse.matrix_[i][j] * ratio;
+                A.matrix_[k][j] -= A.matrix_[i][j] * ratio;
+            }
+            std::cout << ratio << "\n" << A << "\n" << inverse << "\n";
+        }
+    }
+
+    return inverse;
 }

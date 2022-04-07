@@ -2,12 +2,14 @@
 #include "Matrix.h"
 
 int main() {
-    Matrix matrix(5, 0);
-    matrix.make_ones_on_main_diag();
-    matrix.set_console_text_colour(NONE);
-    std::cout << matrix << "\n";
-    Matrix matrix1({{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}});
-    Matrix matrix2({{1, 2, 3, 4, 5}, {6, 7, 8, 9, 10}, {11, 12, 13, 14, 15}});
-    std::cout << matrix1 - matrix2;
+    for (int i = 0; i < 1; ++i){
+        std::cout << i + 1 << " iteration:\n";
+        Matrix A = Matrix::get_random_symmetrical_matrix(6);
+        Matrix x = Matrix::get_random_vector_column(3);
+        A.inverse_by_gauss_jordan_method();
+//        std::cout << "A:\n" << A << "\n";
+//        std::cout << "x:\n" << x << "\n";
+//        std::cout << "b:\n" << A * x << "\n";
+    }
     return 0;
 }
