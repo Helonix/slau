@@ -159,7 +159,7 @@ Matrix Matrix::operator-() const {
     return result;
 }
 
-Matrix::Matrix(Matrix& other) {
+Matrix::Matrix(const Matrix& other) {
     this->matrix_ = std::vector(other.matrix_);
     this->rows_amount_ = other.rows_amount_;
     this->columns_amount_ = other.columns_amount_;
@@ -199,18 +199,20 @@ Matrix Matrix::get_random_vector_column(unsigned int size) {
 long double Matrix::get_cubic_norm() const {
     long double max_row_sum = 0, current_sum = 0;
     for (int i = 0; i < this->rows_amount_; ++i){
-        for (int j = 0; j < this->columns_amount_; ++j){
+        for (int j = 0; j < this->columns_amount_; ++j) {
             current_sum += std::abs(this->matrix_[i][j]);
         }
-        if (current_sum - max_row_sum > eps){
+        if (current_sum - max_row_sum > eps_) {
             max_row_sum = current_sum;
             current_sum = 0;
         }
     }
     return max_row_sum;
 }
+
+// TODO: разделить на диагональные, чтобы привести правую часть к единичной
 Matrix Matrix::inverse_by_gauss_jordan_method() {
-    if (this->rows_amount_ != this->columns_amount_){
+    if (this->rows_amount_ != this->columns_amount_) {
         std::cerr << "Matrix must be square\n";
         return {this->rows_amount_, this->columns_amount_, 0};
     }

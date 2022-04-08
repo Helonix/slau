@@ -1,4 +1,4 @@
-C:\Users\emely\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\213.6777.58\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/emely/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/213.6777.58/bin/ninja/win/ninja.exe -G Ninja E:\programming\git\BSU_4_semestr\calculation_methods\lab1
+C:\Users\emely\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\213.7172.20\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/emely/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/213.7172.20/bin/ninja/win/ninja.exe -G Ninja E:\programming\git\BSU_4_semestr\calculation_methods\lab1
 -- Configuring done
 -- Generating done
 -- Build files have been written to: E:/programming/git/BSU_4_semestr/calculation_methods/lab1/cmake-build-debug

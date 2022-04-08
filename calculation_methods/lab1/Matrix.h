@@ -16,7 +16,7 @@ enum Colour{
 
 class Matrix {
  private:
-  double eps = 1e-7;
+  double eps_ = 1e-7;
   Colour console_output_colour = NONE;
   unsigned int rows_amount_, columns_amount_;
   std::vector<std::vector<double>> matrix_;
@@ -27,7 +27,7 @@ class Matrix {
   Matrix(unsigned int rows_amount, unsigned int columns_amount, double default_value);
   explicit Matrix(unsigned int square_matrix_size, double default_value);
   explicit Matrix(std::vector<std::vector<double>>&& matrix);
-  Matrix(Matrix& other);
+  Matrix(const Matrix& other);
 
   // Operator overloading
   Matrix operator+ (const Matrix& rhs) const;
