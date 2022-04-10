@@ -12,11 +12,11 @@
 
 class Matrix {
  private:
-  double eps_ = 1e-7;
+  double eps_ = 1e-12;
   Colour console_output_colour = NONE;
   unsigned int rows_amount_, columns_amount_;
   std::vector<std::vector<double>> matrix_;
-  int output_precision_ = 7;
+  int output_precision_ = 12;
 //  std::pair<Matrix, Matrix> last_decomposition_;
 
  public:
@@ -43,6 +43,8 @@ class Matrix {
   unsigned int get_columns_amount() const;
   long double get_condition_number_by_cubic_norm();
   std::pair<Matrix, std::vector<int>> get_LUP_by_columns_decomposition();
+  Matrix get_GGT_decomposition();
+  Matrix get_LDLT_decomposition();
 
   // Setters
   void set_console_text_colour(Colour colour);
@@ -65,11 +67,11 @@ class Matrix {
   static Matrix solve_by_sqrt_method(Matrix A, Matrix b);
 
   // 7th task: relaxation method
-  static Matrix solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps);
+  static std::pair<Matrix, int> solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps);
 
   // Other methods
 //  static std::string LUP_by_columns_to_string(std::pair<Matrix, std::vector<int>> lup);
-//  static std::string LDLT_to_string(const Matrix& decomposition);
+  static void print_LDLT(const Matrix& decomposition, std::ostream& out);
   void make_ones_on_main_diag();
   void add(Matrix& lhs);
   Matrix transpose();

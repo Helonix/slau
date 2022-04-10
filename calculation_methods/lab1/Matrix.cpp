@@ -163,7 +163,6 @@ Matrix::Matrix(const Matrix& other) {
     this->columns_amount_ = other.columns_amount_;
 }
 
-// TODO: change implementation: no unary minus usage
 Matrix Matrix::operator-(const Matrix& rhs) const {
     return *this + (-rhs);
 }
@@ -285,7 +284,6 @@ void Matrix::set_output_precision(int precision) {
     output_precision_ = precision;
 }
 
-// не работает, проблема в индексах, скорее всего
 Matrix Matrix::solve_by_gauss_with_selection_by_columns(Matrix A, Matrix b) {
     Matrix x = Matrix(A.rows_amount_, 1, 0);
 
@@ -326,11 +324,6 @@ Matrix Matrix::solve_by_gauss_with_selection_by_columns(Matrix A, Matrix b) {
 
     return x;
 }
-
-
-//void forward_gauss_with_L_matrix_filling(Matrix& A){
-//
-//}
 
 std::pair<Matrix, std::vector<int>> Matrix::get_LUP_by_columns_decomposition() {
     std::vector<int> p(this->rows_amount_);
@@ -425,46 +418,8 @@ Matrix Matrix::solve_LUP_by_columns(const std::pair<Matrix, std::vector<int>>& l
     return x;
 }
 
-// TODO: not finished
-Matrix Matrix::solve_by_sqrt_method(Matrix A, Matrix b) {
-    std::cout << A << "\n";
-    Matrix x = Matrix(b.rows_amount_, 1, 0);
-    Matrix y = Matrix(b.rows_amount_, 1, 0);
 
-    for (int i = 0; i < A.rows_amount_; ++i) {
-        for (int k = i + 1; k < A.rows_amount_; ++k) {
-            if (std::abs(A.matrix_[k][i]) < A.eps_) {
-                continue;
-            }
-            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
-            A.matrix_[k][i] = -ratio;
-
-            for (int j = i + 1; j < A.columns_amount_; ++j) {
-                A.matrix_[k][j] += ratio * A.matrix_[i][j];
-            }
-        }
-        A.matrix_[i][i] /= std::sqrt(std::abs(A.matrix_[i][i]));
-    }
-    Matrix d = Matrix(A.rows_amount_, A.columns_amount_, 0);
-    Matrix e = Matrix(A.rows_amount_, A.columns_amount_, 0);
-
-    std::cout << A << "\n";
-
-//    for (int i = 0; i < A.rows_amount_; ++i){
-//        d.matrix_[i][i] = std::abs(A.matrix_[i][i]);
-//        e.matrix_[i][i] = A.matrix_[i][i] / d.matrix_[i][i];
-//        A.matrix_[i][i] = 1;
-//        for (int j = i + 1; j < A.columns_amount_; ++j){
-//            A.matrix_[i][j] = 0;
-//        }
-//    }
-
-//    std::cout <<  A * d * e * d * A.transpose() << '\n' << A * d << "\n";
-
-    return x;
-}
-
-Matrix Matrix::solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps = 1e-13) {
+std::pair<Matrix, int> Matrix::solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps = 1e-13) {
     Matrix previous_x = Matrix(A.rows_amount_, 1, 1);
     Matrix x = Matrix(A.rows_amount_, 1, 0);
     double ratio;
@@ -486,7 +441,7 @@ Matrix Matrix::solve_by_relaxation_method(Matrix A, Matrix b, double w, double e
         ++iterations;
     }
 
-    return x;
+    return std::pair<Matrix, int>{x, iterations};
 }
 
 Matrix Matrix::operator*(int rhs) const {
@@ -498,3 +453,97 @@ Matrix Matrix::operator*(int rhs) const {
     }
     return result;
 }
+Matrix Matrix::get_GGT_decomposition() {
+    Matrix A(*this);
+    double ratio;
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        for (int k = i + 1; k < A.rows_amount_; ++k) {
+            if (std::abs(A.matrix_[k][i]) < A.eps_) {
+                continue;
+            }
+            ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            for (int j = i + 1; j < A.columns_amount_; ++j) {
+                A.matrix_[k][j] += ratio * A.matrix_[i][j];
+            }
+        }
+    }
+
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        ratio = std::sqrt(std::abs(A.matrix_[i][i]));
+        A.matrix_[i][i] /= ratio;
+        for (int j = i + 1; j < A.columns_amount_; ++j) {
+            A.matrix_[i][j] /= ratio;
+            A.matrix_[j][i] = A.matrix_[i][j];
+        }
+    }
+
+    return A;
+}
+
+Matrix Matrix::get_LDLT_decomposition() {
+    Matrix A(*this);
+    double ratio;
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        for (int k = i + 1; k < A.rows_amount_; ++k) {
+            if (std::abs(A.matrix_[k][i]) < A.eps_) {
+                continue;
+            }
+            ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            A.matrix_[k][i] = -ratio;
+
+            for (int j = i + 1; j < A.columns_amount_; ++j) {
+                A.matrix_[k][j] += ratio * A.matrix_[i][j];
+            }
+        }
+    }
+
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        for (int j = i + 1; j < A.columns_amount_; ++j) {
+            A.matrix_[i][j] = A.matrix_[j][i];
+        }
+    }
+
+    return A;
+}
+
+Matrix Matrix::solve_by_sqrt_method(Matrix A, Matrix b) {
+
+    Matrix x = Matrix(b.rows_amount_, 1, 0);
+    Matrix y = Matrix(b.rows_amount_, 1, 0);
+
+    A = A.get_GGT_decomposition();
+
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        y.matrix_[i][0] = b.matrix_[i][0];
+        for (int j = 0; j < i; ++j) {
+            y.matrix_[i][0] -= A.matrix_[i][j] * y.matrix_[j][0];
+        }
+        y.matrix_[i][0] /= A.matrix_[i][i];
+    }
+
+    for (int i = A.rows_amount_ - 1; i >= 0; --i) {
+        x.matrix_[i][0] = y.matrix_[i][0];
+        for (int j = i + 1; j < A.columns_amount_; ++j) {
+            x.matrix_[i][0] -= A.matrix_[i][j] * x.matrix_[j][0];
+        }
+        x.matrix_[i][0] /= A.matrix_[i][i];
+    }
+
+    return x;
+}
+void Matrix::print_LDLT(const Matrix& decomposition, std::ostream& out) {
+    Matrix L = Matrix(decomposition.rows_amount_, 0);
+    Matrix D = Matrix(decomposition.rows_amount_, 0);
+    for (int i = 0; i < decomposition.rows_amount_; ++i) {
+        D.matrix_[i][i] = decomposition.matrix_[i][i];
+        L.matrix_[i][i] = 1;
+        for (int j = 0; j < i; ++j) {
+            L.matrix_[i][j] = decomposition.matrix_[i][j];
+        }
+    }
+
+    out << "L matrix:\n" << L << "\nD matrix:\n" << D << "\nL^T matrix:\n" << L.transpose() << "\n";
+    out << L * D * L.transpose();
+}
+
+
