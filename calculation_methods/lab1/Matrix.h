@@ -25,12 +25,13 @@ class Matrix {
   explicit Matrix(unsigned int square_matrix_size, double default_value);
   explicit Matrix(std::vector<std::vector<double>>&& matrix);
   Matrix();
-//  Matrix(const Matrix& other);
+  Matrix(const Matrix& other);
 
   // Operator overloading
   Matrix operator+(const Matrix& rhs) const;
   Matrix operator-(const Matrix& rhs) const;
   Matrix operator*(const Matrix& rhs) const;
+  Matrix operator*(int rhs) const;
   Matrix operator-() const;
   bool operator==(const Matrix& rhs) const;
   bool operator!=(const Matrix& rhs) const;
@@ -60,9 +61,15 @@ class Matrix {
   // 5th task: solve LUP by columns
   static Matrix solve_LUP_by_columns(const std::pair<Matrix, std::vector<int>>& lup_decomposition, const Matrix& b);
 
+  // 6th task: solve by square root method
+  static Matrix solve_by_sqrt_method(Matrix A, Matrix b);
+
+  // 7th task: relaxation method
+  static Matrix solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps);
+
   // Other methods
 //  static std::string LUP_by_columns_to_string(std::pair<Matrix, std::vector<int>> lup);
-  static std::string LDLT_to_string(const Matrix& decomposition);
+//  static std::string LDLT_to_string(const Matrix& decomposition);
   void make_ones_on_main_diag();
   void add(Matrix& lhs);
   Matrix transpose();

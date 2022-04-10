@@ -51,19 +51,19 @@ build cmake_object_order_depends_target_lab1: phony || CMakeFiles/lab1.dir
 
 build CMakeFiles/lab1.dir/main.cpp.obj: CXX_COMPILER__lab1_Debug E$:/programming/git/BSU_4_semestr/calculation_methods/lab1/main.cpp || cmake_object_order_depends_target_lab1
   DEP_FILE = CMakeFiles\lab1.dir\main.cpp.obj.d
-  FLAGS = -O4 -g -std=gnu++17
+  FLAGS = -g -std=gnu++17
   OBJECT_DIR = CMakeFiles\lab1.dir
   OBJECT_FILE_DIR = CMakeFiles\lab1.dir
 
 build CMakeFiles/lab1.dir/Matrix.cpp.obj: CXX_COMPILER__lab1_Debug E$:/programming/git/BSU_4_semestr/calculation_methods/lab1/Matrix.cpp || cmake_object_order_depends_target_lab1
   DEP_FILE = CMakeFiles\lab1.dir\Matrix.cpp.obj.d
-  FLAGS = -O4 -g -std=gnu++17
+  FLAGS = -g -std=gnu++17
   OBJECT_DIR = CMakeFiles\lab1.dir
   OBJECT_FILE_DIR = CMakeFiles\lab1.dir
 
 build CMakeFiles/lab1.dir/Timer.cpp.obj: CXX_COMPILER__lab1_Debug E$:/programming/git/BSU_4_semestr/calculation_methods/lab1/Timer.cpp || cmake_object_order_depends_target_lab1
   DEP_FILE = CMakeFiles\lab1.dir\Timer.cpp.obj.d
-  FLAGS = -O4 -g -std=gnu++17
+  FLAGS = -g -std=gnu++17
   OBJECT_DIR = CMakeFiles\lab1.dir
   OBJECT_FILE_DIR = CMakeFiles\lab1.dir
 
@@ -76,7 +76,7 @@ build CMakeFiles/lab1.dir/Timer.cpp.obj: CXX_COMPILER__lab1_Debug E$:/programmin
 # Link the executable lab1.exe
 
 build lab1.exe: CXX_EXECUTABLE_LINKER__lab1_Debug CMakeFiles/lab1.dir/main.cpp.obj CMakeFiles/lab1.dir/Matrix.cpp.obj CMakeFiles/lab1.dir/Timer.cpp.obj
-  FLAGS = -O4 -g
+  FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\lab1.dir
   POST_BUILD = cd .
