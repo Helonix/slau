@@ -4,11 +4,9 @@
 
 #include <iostream>
 #include <iomanip>
-#include <random>
 #include "Matrix.h"
 
-std::random_device rd;
-std::default_random_engine engine(rd());
+std::default_random_engine engine(time(nullptr));
 std::uniform_real_distribution<double> dist(-std::pow(2.0, 1.5), std::pow(2.0, 1.5));
 
 /// Common matrix constructor
@@ -266,7 +264,7 @@ Matrix Matrix::inverse_by_gauss_jordan_method() {
         for (int j = 0; j < A.columns_amount_; ++j) {
             inverse.matrix_[i][j] /= A.matrix_[i][i];
         }
-        A.matrix_[i][i] = 1;
+//        A.matrix_[i][i] = 1;
     }
 
     return inverse;
@@ -290,11 +288,7 @@ void Matrix::set_output_precision(int precision) {
 // не работает, проблема в индексах, скорее всего
 Matrix Matrix::solve_by_gauss_with_selection_by_columns(Matrix A, Matrix b) {
     Matrix x = Matrix(A.rows_amount_, 1, 0);
-    std::vector<int> p(A.rows_amount_);
 
-    for (int i = 0; i < A.rows_amount_; ++i) {
-        p[i] = i;
-    }
     int max_elem_index = 0;
     double max_elem = 0;
     for (int i = 0; i < A.rows_amount_; ++i) {
@@ -307,14 +301,12 @@ Matrix Matrix::solve_by_gauss_with_selection_by_columns(Matrix A, Matrix b) {
         if (max_elem_index != i) {
             std::swap(A.matrix_[i], A.matrix_[max_elem_index]);
             std::swap(b.matrix_[i], b.matrix_[max_elem_index]);
-            std::swap(p[i], p[max_elem_index]);
         }
         for (int k = i + 1; k < A.rows_amount_; ++k) {
             if (std::abs(A.matrix_[k][i]) < A.eps_) {
                 continue;
             }
             double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
-//            A.matrix_[k][i] = -ratio;
 
             for (int j = i + 1; j < A.columns_amount_; ++j) {
                 A.matrix_[k][j] += ratio * A.matrix_[i][j];
@@ -336,12 +328,97 @@ Matrix Matrix::solve_by_gauss_with_selection_by_columns(Matrix A, Matrix b) {
 }
 
 std::pair<Matrix, std::vector<int>> Matrix::get_LUP_by_columns_decomposition() {
+    std::vector<int> p(this->rows_amount_);
 
-    return std::pair<Matrix, std::vector<int>>();
+    for (int i = 0; i < this->rows_amount_; ++i) {
+        p[i] = i;
+    }
+
+    Matrix A = Matrix(*this);
+
+    int max_elem_index = 0;
+    double max_elem = 0;
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        for (int m = i; m < A.rows_amount_; ++m) {
+            if (std::abs(A.matrix_[m][i]) - max_elem_index > A.eps_) {
+                max_elem = std::abs(A.matrix_[m][i]);
+                max_elem_index = m;
+            }
+        }
+        if (max_elem_index != i) {
+            std::swap(A.matrix_[i], A.matrix_[max_elem_index]);
+            std::swap(p[i], p[max_elem_index]);
+        }
+        for (int k = i + 1; k < A.rows_amount_; ++k) {
+            if (std::abs(A.matrix_[k][i]) < A.eps_) {
+                continue;
+            }
+            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            A.matrix_[k][i] = -ratio;
+
+            for (int j = i + 1; j < A.columns_amount_; ++j) {
+                A.matrix_[k][j] += ratio * A.matrix_[i][j];
+            }
+        }
+    }
+
+    return std::pair<Matrix, std::vector<int>>{A, p};
 }
 
 Matrix::Matrix() {
     this->matrix_ = std::vector<std::vector<double>>(1, std::vector<double>(1, 0));
     this->rows_amount_ = 1;
     this->columns_amount_ = 1;
+}
+
+bool Matrix::operator==(const Matrix& rhs) const {
+    if (columns_amount_ != rhs.columns_amount_ || rows_amount_ != rhs.rows_amount_) {
+        return false;
+    }
+
+    for (int i = 0; i < this->rows_amount_; ++i) {
+        for (int j = 0; j < this->columns_amount_; ++j) {
+            if (std::abs(this->matrix_[i][j] - rhs.matrix_[i][j]) > this->eps_) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool Matrix::operator!=(const Matrix& rhs) const {
+    return !(rhs == *this);
+}
+
+Matrix Matrix::solve_LUP_by_columns(const std::pair<Matrix, std::vector<int>>& lup_decomposition, const Matrix& b) {
+    Matrix x = Matrix(lup_decomposition.first.rows_amount_, 1, 0);
+    Matrix p_b = Matrix(b.rows_amount_, 1, 0);
+    Matrix A = Matrix(lup_decomposition.first);
+    for (int i = 0; i < p_b.rows_amount_; ++i) {
+        p_b.matrix_[i][0] = b.matrix_[lup_decomposition.second[i]][0];
+    }
+
+    Matrix y = Matrix(x.rows_amount_, x.columns_amount_, 0);
+    double summary;
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        summary = p_b.matrix_[i][0];
+        for (int j = 0; j < i; ++j) {
+            summary -= A.matrix_[i][j] * y.matrix_[j][0];
+        }
+        y.matrix_[i][0] = summary;
+    }
+
+    for (int i = A.rows_amount_ - 1; i >= 0; --i) {
+        summary = y.matrix_[i][0];
+        for (int j = i + 1; j < A.columns_amount_; ++j) {
+            summary -= A.matrix_[i][j] * x.matrix_[j][0];
+        }
+        x.matrix_[i][0] = summary / A.matrix_[i][i];
+    }
+
+    return x;
+}
+std::string Matrix::LDLT_to_string(const Matrix& decomposition) {
+    return "";
 }
