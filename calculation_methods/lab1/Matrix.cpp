@@ -50,31 +50,29 @@ void Matrix::add(Matrix& lhs) {
         return;
     }
 
-    for (int i = 0; i < rows_amount_; ++i){
-        for (int j = 0; j < columns_amount_; ++j){
+    for (int i = 0; i < rows_amount_; ++i) {
+        for (int j = 0; j < columns_amount_; ++j) {
             matrix_[i][j] += lhs.matrix_[i][j];
         }
     }
 }
 
-// TODO: transposition is not finished
-void Matrix::transpose() {
-    unsigned int new_rows = columns_amount_;
-    unsigned int new_columns = rows_amount_;
-    if (rows_amount_ != columns_amount_){
-        unsigned int new_size = std::max(columns_amount_, rows_amount_);
-        matrix_.resize(new_size);
-        for (int i = 0; i < matrix_.size(); ++i){
-            matrix_[i].resize(new_size);
+Matrix Matrix::transpose() {
+    Matrix transposed = Matrix(this->columns_amount_, this->rows_amount_, 0);
+
+    for (int i = 0; i < this->rows_amount_; ++i) {
+        for (int j = 0; j < this->columns_amount_; ++j) {
+            transposed.matrix_[j][i] = this->matrix_[i][j];
         }
     }
+
+    return transposed;
 }
 
 std::ostream& operator<<(std::ostream& out, const Matrix& matrix) {
-//    out.precision(7);
     std::ios state(nullptr);
     state.copyfmt(out);
-    out.precision(8);
+    out.precision(matrix.output_precision_);
     switch (matrix.console_output_colour) {
         case GREEN:
             out << "\x1b[32;1;3m";
@@ -90,7 +88,7 @@ std::ostream& operator<<(std::ostream& out, const Matrix& matrix) {
     }
     for (int i = 0; i < matrix.rows_amount_; ++i){
         for (int j = 0; j < matrix.columns_amount_; ++j){
-            out  << std::setw(20) << std::fixed <<  matrix.matrix_[i][j];
+            out << std::setw(matrix.output_precision_ * 2) << std::fixed << matrix.matrix_[i][j];
         }
         out << "\n";
     }
@@ -100,9 +98,11 @@ std::ostream& operator<<(std::ostream& out, const Matrix& matrix) {
     out.copyfmt(state);
     return out;
 }
+
 void Matrix::set_console_text_colour(Colour colour) {
     console_output_colour = colour;
 }
+
 Matrix Matrix::operator+(const Matrix& rhs) const {
     if (this->rows_amount_ != rhs.rows_amount_ || this->columns_amount_ != rhs.columns_amount_){
         std::cerr << "Inconsistent matrix for operation +\n";
@@ -150,8 +150,8 @@ Matrix Matrix::operator*(const Matrix& rhs) const {
 Matrix Matrix::operator-() const {
     Matrix result(this->rows_amount_, this->columns_amount_, 0);
 
-    for (int i = 0; i < this->rows_amount_; ++i){
-        for (int j = 0; j < this->columns_amount_; ++j){
+    for (int i = 0; i < this->rows_amount_; ++i) {
+        for (int j = 0; j < this->columns_amount_; ++j) {
             result.matrix_[i][j] = -this->matrix_[i][j];
         }
     }
@@ -159,11 +159,11 @@ Matrix Matrix::operator-() const {
     return result;
 }
 
-Matrix::Matrix(const Matrix& other) {
-    this->matrix_ = std::vector(other.matrix_);
-    this->rows_amount_ = other.rows_amount_;
-    this->columns_amount_ = other.columns_amount_;
-}
+//Matrix::Matrix(const Matrix& other) {
+//    this->matrix_ = std::vector(other.matrix_);
+//    this->rows_amount_ = other.rows_amount_;
+//    this->columns_amount_ = other.columns_amount_;
+//}
 
 // TODO: change implementation: no unary minus usage
 Matrix Matrix::operator-(const Matrix& rhs) const {
@@ -198,19 +198,19 @@ Matrix Matrix::get_random_vector_column(unsigned int size) {
 
 long double Matrix::get_cubic_norm() const {
     long double max_row_sum = 0, current_sum = 0;
-    for (int i = 0; i < this->rows_amount_; ++i){
+    for (int i = 0; i < this->rows_amount_; ++i) {
         for (int j = 0; j < this->columns_amount_; ++j) {
             current_sum += std::abs(this->matrix_[i][j]);
         }
         if (current_sum - max_row_sum > eps_) {
             max_row_sum = current_sum;
-            current_sum = 0;
         }
+        current_sum = 0;
     }
     return max_row_sum;
 }
 
-// TODO: разделить на диагональные, чтобы привести правую часть к единичной
+// TODO: протестировать дополнительно
 Matrix Matrix::inverse_by_gauss_jordan_method() {
     if (this->rows_amount_ != this->columns_amount_) {
         std::cerr << "Matrix must be square\n";
@@ -223,31 +223,125 @@ Matrix Matrix::inverse_by_gauss_jordan_method() {
 
     // forward Gauss
 
-    std::cout << A << "\n" << inverse << "\n";
-
-    for (int i = 0; i < A.rows_amount_ - 1; ++i){
-        for (int k = i + 1; k < A.rows_amount_; ++k){
-            double ratio =  A.matrix_[k][i] / A.matrix_[i][i];
-            for (int j = i; j < A.columns_amount_; ++j){
-                inverse.matrix_[k][j] -= inverse.matrix_[i][j] * ratio;
-                A.matrix_[k][j] -= A.matrix_[i][j] * ratio;
+    for (int i = 0; i < A.rows_amount_ - 1; ++i) {
+        if (std::abs(A.matrix_[i][i]) < eps_) {
+            std::cerr << "Can't find inverse matrix, determinant is equal to 0\n";
+            return {this->rows_amount_, this->columns_amount_, 0};
+        }
+        for (int k = i + 1; k < A.rows_amount_; ++k) {
+            if (std::abs(A.matrix_[k][i]) < eps_) {
+                continue;
             }
-            std::cout << ratio << "\n" << A << "\n" << inverse << "\n";
+            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            for (int j = 0; j < A.columns_amount_; ++j) {
+                inverse.matrix_[k][j] += inverse.matrix_[i][j] * ratio;
+                if (j >= i) {
+                    A.matrix_[k][j] += A.matrix_[i][j] * ratio;
+                }
+            }
         }
     }
 
     // Reverse Gauss
 
-    for (int i = A.rows_amount_ - 1; i > 0; --i){
-        for (int k = i - 1; k >= 0; --k){
-            double ratio =  A.matrix_[k][i] / A.matrix_[i][i];
-            for (int j = i; j >= k; --j){
-                inverse.matrix_[k][j] -= inverse.matrix_[i][j] * ratio;
-                A.matrix_[k][j] -= A.matrix_[i][j] * ratio;
+
+    for (int i = A.rows_amount_ - 1; i > 0; --i) {
+        if (std::abs(A.matrix_[i][i]) < eps_) {
+            std::cerr << "Can't find inverse matrix, determinant is equal to 0\n";
+            return {this->rows_amount_, this->columns_amount_, 0};
+        }
+        for (int k = i - 1; k >= 0; --k) {
+            if (std::abs(A.matrix_[k][i]) < eps_) {
+                continue;
             }
-            std::cout << ratio << "\n" << A << "\n" << inverse << "\n";
+            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            A.matrix_[k][i] += A.matrix_[i][i] * ratio;
+            for (int j = 0; j < A.columns_amount_; ++j) {
+                inverse.matrix_[k][j] += inverse.matrix_[i][j] * ratio;
+            }
         }
     }
 
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        for (int j = 0; j < A.columns_amount_; ++j) {
+            inverse.matrix_[i][j] /= A.matrix_[i][i];
+        }
+        A.matrix_[i][i] = 1;
+    }
+
     return inverse;
+}
+unsigned int Matrix::get_rows_amount() const {
+    return rows_amount_;
+}
+
+unsigned int Matrix::get_columns_amount() const {
+    return columns_amount_;
+}
+
+long double Matrix::get_condition_number_by_cubic_norm() {
+    return this->inverse_by_gauss_jordan_method().get_cubic_norm() * this->get_cubic_norm();
+}
+
+void Matrix::set_output_precision(int precision) {
+    output_precision_ = precision;
+}
+
+// не работает, проблема в индексах, скорее всего
+Matrix Matrix::solve_by_gauss_with_selection_by_columns(Matrix A, Matrix b) {
+    Matrix x = Matrix(A.rows_amount_, 1, 0);
+    std::vector<int> p(A.rows_amount_);
+
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        p[i] = i;
+    }
+    int max_elem_index = 0;
+    double max_elem = 0;
+    for (int i = 0; i < A.rows_amount_; ++i) {
+        for (int m = i; m < A.rows_amount_; ++m) {
+            if (std::abs(A.matrix_[m][i]) - max_elem_index > A.eps_) {
+                max_elem = std::abs(A.matrix_[m][i]);
+                max_elem_index = m;
+            }
+        }
+        if (max_elem_index != i) {
+            std::swap(A.matrix_[i], A.matrix_[max_elem_index]);
+            std::swap(b.matrix_[i], b.matrix_[max_elem_index]);
+            std::swap(p[i], p[max_elem_index]);
+        }
+        for (int k = i + 1; k < A.rows_amount_; ++k) {
+            if (std::abs(A.matrix_[k][i]) < A.eps_) {
+                continue;
+            }
+            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+//            A.matrix_[k][i] = -ratio;
+
+            for (int j = i + 1; j < A.columns_amount_; ++j) {
+                A.matrix_[k][j] += ratio * A.matrix_[i][j];
+            }
+            b.matrix_[k][0] += b.matrix_[i][0] * ratio;
+        }
+    }
+
+    double summary = 0;
+    for (int i = A.rows_amount_ - 1; i >= 0; --i) {
+        summary = b.matrix_[i][0];
+        for (int j = i + 1; j < A.rows_amount_; ++j) {
+            summary -= A.matrix_[i][j] * x.matrix_[j][0];
+        }
+        x.matrix_[i][0] = summary / A.matrix_[i][i];
+    }
+
+    return x;
+}
+
+std::pair<Matrix, std::vector<int>> Matrix::get_LUP_by_columns_decomposition() {
+
+    return std::pair<Matrix, std::vector<int>>();
+}
+
+Matrix::Matrix() {
+    this->matrix_ = std::vector<std::vector<double>>(1, std::vector<double>(1, 0));
+    this->rows_amount_ = 1;
+    this->columns_amount_ = 1;
 }
