@@ -86,7 +86,7 @@ std::ostream& operator<<(std::ostream& out, const Matrix& matrix) {
     }
     for (int i = 0; i < matrix.rows_amount_; ++i){
         for (int j = 0; j < matrix.columns_amount_; ++j){
-            out << std::setw(matrix.output_precision_ * 2) << std::fixed << matrix.matrix_[i][j];
+            out << std::setw(matrix.output_precision_ * 2 + 5) << std::fixed << matrix.matrix_[i][j];
         }
         out << "\n";
     }
@@ -219,7 +219,7 @@ Matrix Matrix::inverse_by_gauss_jordan_method() {
     Matrix A = Matrix(*this);
 
     // forward Gauss
-
+    double ratio;
     for (int i = 0; i < A.rows_amount_ - 1; ++i) {
         if (std::abs(A.matrix_[i][i]) < eps_) {
             std::cerr << "Can't find inverse matrix, determinant is equal to 0\n";
@@ -229,7 +229,7 @@ Matrix Matrix::inverse_by_gauss_jordan_method() {
             if (std::abs(A.matrix_[k][i]) < eps_) {
                 continue;
             }
-            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
             for (int j = 0; j < A.columns_amount_; ++j) {
                 inverse.matrix_[k][j] += inverse.matrix_[i][j] * ratio;
                 if (j >= i) {
@@ -243,15 +243,11 @@ Matrix Matrix::inverse_by_gauss_jordan_method() {
 
 
     for (int i = A.rows_amount_ - 1; i > 0; --i) {
-        if (std::abs(A.matrix_[i][i]) < eps_) {
-            std::cerr << "Can't find inverse matrix, determinant is equal to 0\n";
-            return {this->rows_amount_, this->columns_amount_, 0};
-        }
         for (int k = i - 1; k >= 0; --k) {
             if (std::abs(A.matrix_[k][i]) < eps_) {
                 continue;
             }
-            double ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
+            ratio = -(A.matrix_[k][i] / A.matrix_[i][i]);
             A.matrix_[k][i] += A.matrix_[i][i] * ratio;
             for (int j = 0; j < A.columns_amount_; ++j) {
                 inverse.matrix_[k][j] += inverse.matrix_[i][j] * ratio;
@@ -263,7 +259,6 @@ Matrix Matrix::inverse_by_gauss_jordan_method() {
         for (int j = 0; j < A.columns_amount_; ++j) {
             inverse.matrix_[i][j] /= A.matrix_[i][i];
         }
-//        A.matrix_[i][i] = 1;
     }
 
     return inverse;

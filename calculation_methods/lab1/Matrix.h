@@ -12,12 +12,11 @@
 
 class Matrix {
  private:
-  double eps_ = 1e-12;
+  double eps_ = std::numeric_limits<double>::epsilon() * 10;
   Colour console_output_colour = NONE;
   unsigned int rows_amount_, columns_amount_;
   std::vector<std::vector<double>> matrix_;
   int output_precision_ = 12;
-//  std::pair<Matrix, Matrix> last_decomposition_;
 
  public:
   // Constructors
@@ -70,7 +69,7 @@ class Matrix {
   static std::pair<Matrix, int> solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps);
 
   // Other methods
-//  static std::string LUP_by_columns_to_string(std::pair<Matrix, std::vector<int>> lup);
+//  static std::string print_LUP(std::pair<Matrix, std::vector<int>> lup);
   static void print_LDLT(const Matrix& decomposition, std::ostream& out);
   void make_ones_on_main_diag();
   void add(Matrix& lhs);

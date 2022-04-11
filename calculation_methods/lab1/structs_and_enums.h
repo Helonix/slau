@@ -15,11 +15,18 @@ enum Colour {
 
 enum TimeTests {
   INVERSE_MATRIX = 0,
-  GAUSS_SOLVE = 1,
+  GAUSS = 1,
   LUP_DECOMPOSITION = 2,
-  LUP_SOLVE = 3,
-  SQRT_SOLVE = 4,
-  RELAXATION_SOLVE = 5
+  LUP = 3,
+  SQRT = 4,
+  RELAXATION = 5
+};
+
+enum Norms {
+  GAUSS_SOLVE = 0,
+  LUP_SOLVE = 1,
+  SQRT_SOLVE = 2,
+  RELAXATION_SOLVE = 3
 };
 
 #endif //LAB1__STRUCTS_AND_ENUMS_H_
