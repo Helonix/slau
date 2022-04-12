@@ -1,37 +1,37 @@
 =============== [Condition Numbers Stats] ===============
-Min condition number is 4.55085
-Max condition number is 5.04464
-Average condition number is 4.68025
+Min condition number is 4.55241
+Max condition number is 4.9064
+Average condition number is 4.69314
 
 ================ [Inverse Matrix Stats] =================
-Average time is 11353.9 mcs
+Average time is 13095.7 mcs
 
 ===================== [Gauss Method] ====================
-Min difference norm is 5.4301e-13
-Max difference norm is 4.04698e-11
-Average difference norm is 5.81699e-12
-Average time is 3224.23 mcs
+Min difference norm is 4.23217e-13
+Max difference norm is 1.08978e-10
+Average difference norm is 5.96905e-12
+Average time is 3667.94 mcs
 
 ================== [LUP-decomposition] ==================
-Average time is 3241.88 mcs
+Average time is 3461 mcs
 
 ==================== [Solve LUx = b'] ===================
-Min difference norm is 5.4301e-13
-Max difference norm is 4.04698e-11
-Average difference norm is 5.81699e-12
-Average time is 129.07 mcs
+Min difference norm is 4.23217e-13
+Max difference norm is 1.08978e-10
+Average difference norm is 5.96905e-12
+Average time is 169.47 mcs
 
 ================ [Solve by SQRT method] =================
-Min difference norm is 4.66294e-15
-Max difference norm is 9.32587e-15
-Average difference norm is 6.30385e-15
-Average time is 3663.14 mcs
+Min difference norm is 3.10862e-15
+Max difference norm is 1.02141e-14
+Average difference norm is 6.05738e-15
+Average time is 3610.17 mcs
 
 ============= [Solve by Relaxation method] ==============
-Min difference norm is 4.88498e-15
-Max difference norm is 1.24345e-14
-Average difference norm is 6.93001e-15
-Average time is 5385.29 mcs
-Min iterations number is 24
-Max iterations number is 26
-Average iterations number is 24.32
+Min difference norm is 3.33067e-15
+Max difference norm is 1.15463e-14
+Average difference norm is 6.45262e-15
+Average time is 4907.13 mcs
+Min iterations number is 23
+Max iterations number is 24
+Average iterations number is 23.23

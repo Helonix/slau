@@ -17,6 +17,7 @@ class Matrix {
   unsigned int rows_amount_, columns_amount_;
   std::vector<std::vector<double>> matrix_;
   int output_precision_ = 12;
+  bool save_diff_norms = true;
 
  public:
   // Constructors
@@ -37,13 +38,14 @@ class Matrix {
   friend std::ostream& operator<<(std::ostream& out, const Matrix& matrix);
 
   // Getters
-  long double get_cubic_norm() const;
+  double get_cubic_norm() const;
   unsigned int get_rows_amount() const;
   unsigned int get_columns_amount() const;
   long double get_condition_number_by_cubic_norm();
   std::pair<Matrix, std::vector<int>> get_LUP_by_columns_decomposition();
   Matrix get_GGT_decomposition();
   Matrix get_LDLT_decomposition();
+  static Matrix get_identity_matrix(unsigned int size);
 
   // Setters
   void set_console_text_colour(Colour colour);
@@ -67,13 +69,17 @@ class Matrix {
 
   // 7th task: relaxation method
   static std::pair<Matrix, int> solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps);
+  static std::pair<Matrix, int> solve_relaxation_and_save_norms(Matrix A, Matrix b, double w, double eps, std::vector<double>& norms_data, const Matrix& real_x);
 
   // Other methods
-//  static std::string print_LUP(std::pair<Matrix, std::vector<int>> lup);
+  static void print_LUP(const std::pair<Matrix, std::vector<int>>& lup, std::ostream& out);
   static void print_LDLT(const Matrix& decomposition, std::ostream& out);
   void make_ones_on_main_diag();
   void add(Matrix& lhs);
   Matrix transpose();
+  Matrix vector_perturbation(int iteration, double value);
+  static double get_error(const Matrix& difference, const Matrix& base);
+  bool is_positive();
 };
 
 #endif //LAB1__MATRIX_H_

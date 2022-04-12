@@ -168,8 +168,7 @@ Matrix Matrix::operator-(const Matrix& rhs) const {
 }
 
 Matrix Matrix::get_random_symmetrical_matrix(unsigned int size) {
-    Matrix result(size, size, 0);
-    result.make_ones_on_main_diag();
+    Matrix result = Matrix::get_identity_matrix(size);
 
     for (int i = 0; i < size; ++i) {
         for (int j = i + 1; j < size; ++j) {
@@ -193,7 +192,7 @@ Matrix Matrix::get_random_vector_column(unsigned int size) {
     return vector;
 }
 
-long double Matrix::get_cubic_norm() const {
+double Matrix::get_cubic_norm() const {
     long double max_row_sum = 0, current_sum = 0;
     for (int i = 0; i < this->rows_amount_; ++i) {
         for (int j = 0; j < this->columns_amount_; ++j) {
@@ -204,7 +203,7 @@ long double Matrix::get_cubic_norm() const {
         }
         current_sum = 0;
     }
-    return max_row_sum;
+    return static_cast<double>(max_row_sum);
 }
 
 // TODO: протестировать дополнительно
@@ -414,11 +413,11 @@ Matrix Matrix::solve_LUP_by_columns(const std::pair<Matrix, std::vector<int>>& l
 }
 
 
-std::pair<Matrix, int> Matrix::solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps = 1e-13) {
-    Matrix previous_x = Matrix(A.rows_amount_, 1, 1);
-    Matrix x = Matrix(A.rows_amount_, 1, 0);
+std::pair<Matrix, int> Matrix::solve_by_relaxation_method(Matrix A, Matrix b, double w, double eps) {
+    Matrix previous_x = Matrix(A.rows_amount_, 1, 0);
+    Matrix x = Matrix(A.rows_amount_, 1, 1);
     double ratio;
-    int MAX_ITERATIONS = 500;
+    int MAX_ITERATIONS = 5000000;
     int iterations = 0;
     while (iterations < MAX_ITERATIONS && (x - previous_x).get_cubic_norm() > eps) {
         previous_x = Matrix(x);
@@ -448,6 +447,7 @@ Matrix Matrix::operator*(int rhs) const {
     }
     return result;
 }
+
 Matrix Matrix::get_GGT_decomposition() {
     Matrix A(*this);
     double ratio;
@@ -464,7 +464,10 @@ Matrix Matrix::get_GGT_decomposition() {
     }
 
     for (int i = 0; i < A.rows_amount_; ++i) {
-        ratio = std::sqrt(std::abs(A.matrix_[i][i]));
+        if (A.matrix_[i][i] < eps_){
+            throw std::runtime_error("Matrix A doesn't fit the requirements A = A^T > 0");
+        }
+        ratio = std::sqrt(A.matrix_[i][i]);
         A.matrix_[i][i] /= ratio;
         for (int j = i + 1; j < A.columns_amount_; ++j) {
             A.matrix_[i][j] /= ratio;
@@ -538,7 +541,76 @@ void Matrix::print_LDLT(const Matrix& decomposition, std::ostream& out) {
     }
 
     out << "L matrix:\n" << L << "\nD matrix:\n" << D << "\nL^T matrix:\n" << L.transpose() << "\n";
-    out << L * D * L.transpose();
 }
 
+void Matrix::print_LUP(const std::pair<Matrix, std::vector<int>>& lup, std::ostream& out) {
+    Matrix L = Matrix::get_identity_matrix(lup.first.rows_amount_);
+    Matrix U = Matrix(lup.first);
+    for (int i = 1; i < U.rows_amount_; ++i){
+        for (int j = 0; j < i; ++j){
+            L.matrix_[i][j] = U.matrix_[i][j];
+            U.matrix_[i][j] = 0;
+        }
+    }
+    Matrix p = Matrix::get_identity_matrix(lup.second.size());
+    Matrix identity = Matrix::get_identity_matrix(lup.second.size());
+    for (int i = 0; i < p.rows_amount_; ++i){
+        p.matrix_[lup.second[i]] = identity.matrix_[i];
+    }
+    out << "L matrix:\n" << L << "\nU matrix:\n" << U << "\nP matrix:\n" << p << "\n";
+}
+Matrix Matrix::get_identity_matrix(unsigned int size) {
+    auto return_value = Matrix(size, 0);
+    return_value.make_ones_on_main_diag();
+    return return_value;
+}
+Matrix Matrix::vector_perturbation(int iteration, double value) {
+    Matrix vector = Matrix(*this);
+    for (int i = 0; i < vector.rows_amount_; ++i){
+        vector.matrix_[i][0] += std::pow(-1, (i * iteration) % 2) * iteration * value;
+    }
+    return vector;
+}
+ double Matrix::get_error(const Matrix& difference, const Matrix& base) {
+    return difference.get_cubic_norm() / base.get_cubic_norm();
+}
+std::pair<Matrix, int> Matrix::solve_relaxation_and_save_norms(Matrix A, Matrix b,
+                                                               double w,
+                                                               double eps,
+                                                               std::vector<double>& norms_data,
+                                                               const Matrix& real_x) {
+    Matrix previous_x = Matrix(A.rows_amount_, 1, 0);
+    Matrix x = Matrix(A.rows_amount_, 1, 1);
+    double ratio;
+    int MAX_ITERATIONS = 10000;
+    int iterations = 0;
+    while (iterations < MAX_ITERATIONS && (x - previous_x).get_cubic_norm() > eps) {
+        if (A.save_diff_norms){
+            norms_data.push_back(std::log10((previous_x - x).get_cubic_norm()));
+        }
+        previous_x = Matrix(x);
+        for (int i = 0; i < A.rows_amount_; ++i) {
+            ratio = w / A.matrix_[i][i];
+            x.matrix_[i][0] = (1 - w) * previous_x.matrix_[i][0] + ratio * b.matrix_[i][0];
+            for (int j = 0; j < x.rows_amount_; ++j) {
+                if (j > i) {
+                    x.matrix_[i][0] -= ratio * A.matrix_[i][j] * previous_x.matrix_[j][0];
+                } else if (j < i) {
+                    x.matrix_[i][0] -= ratio * A.matrix_[i][j] * x.matrix_[j][0];
+                }
+            }
+        }
+        ++iterations;
+    }
 
+    return std::pair<Matrix, int>{x, iterations};
+}
+bool Matrix::is_positive() {
+    Matrix A = this->get_LDLT_decomposition();
+    for (int i = 0; i < A.rows_amount_; ++i){
+        if (A.matrix_[i][i] < 0){
+            return false;
+        }
+    }
+    return true;
+}
